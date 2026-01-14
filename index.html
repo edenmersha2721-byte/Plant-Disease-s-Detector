@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Detector | AI-Powered Plant Health Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #2E7D32;
+            --secondary-green: #4CAF50;
+            --light-green: #C8E6C9;
+            --accent-green: #81C784;
+            --dark-green: #1B5E20;
+            --neutral-light: #F9F9F9;
+            --neutral-gray: #757575;
+            --white: #FFFFFF;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.12);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5fff5 0%, #e8f5e9 100%);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Fixed Header & Navigation */
+        header {
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--dark-green);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            color: var(--secondary-green);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--neutral-gray);
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary-green);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: var(--white);
+            color: var(--primary-green);
+            border: 2px solid var(--accent-green);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--light-green);
+            transform: translateY(-2px);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background-color: var(--light-green);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .user-profile:hover {
+            background-color: var(--accent-green);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--dark-green);
+        }
+
+        /* Account Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .account-modal {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 40px;
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .account-modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            color: var(--dark-green);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--neutral-gray);
+            cursor: pointer;
+            padding: 5px;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--primary-green);
+            transform: rotate(90deg);
+        }
+
+        .account-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .info-card {
+            background-color: var(--neutral-light);
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-content {
+            color: var(--neutral-gray);
+        }
+
+        .scan-history {
+            margin-top: 30px;
+        }
+
+        .history-title {
+            font-size: 1.4rem;
+            color: var(--dark-green);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-green);
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .history-item {
+            background-color: var(--neutral-light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-green);
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+            background-color: #f0faf0;
+        }
+
+        .history-disease {
+            font-weight: 600;
+            color: var(--dark-green);
+            margin-bottom: 5px;
+        }
+
+        .history-date {
+            font-size: 0.9rem;
+            color: var(--neutral-gray);
+            margin-bottom: 8px;
+        }
+
+        .history-confidence {
+            display: inline-block;
+            background-color: var(--light-green);
+            color: var(--primary-green);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--neutral-gray);
+            font-style: italic;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 160px 0 100px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--dark-green);
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero-tagline {
+            font-size: 1.25rem;
+            color: var(--neutral-gray);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        /* How It Works Section */
+        .section {
+            padding: 100px 0;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark-green);
+            margin-bottom: 60px;
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .step-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: 40px 30px;
+            text-align: center;
+            flex: 1;
+            min-width: 250px;
+            max-width: 320px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .step-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .step-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--light-green), var(--accent-green));
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin: 0 auto 20px;
+        }
+
+        .step-icon {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-green);
+            margin-bottom: 15px;
+        }
+
+        .step-description {
+            color: var(--neutral-gray);
+            line-height: 1.6;
+        }
+
+        /* Upload & Analyze Section */
+        .upload-section {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: 60px;
+            box-shadow: var(--shadow);
+            margin-bottom: 80px;
+            position: relative;
+        }
+
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .upload-area {
+            width: 100%;
+            max-width: 600px;
+            border: 3px dashed var(--accent-green);
+            border-radius: var(--radius);
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: #f9fffb;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-green);
+            background-color: #f0faf0;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary-green);
+            margin-bottom: 20px;
+        }
+
+        .upload-instructions {
+            font-size: 1.1rem;
+            color: var(--neutral-gray);
+            margin-bottom: 10px;
+        }
+
+        .upload-note {
+            font-size: 0.9rem;
+            color: var(--neutral-gray);
+            margin-top: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 0 auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .analyze-btn {
+            margin-top: 30px;
+            min-width: 200px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+        }
+
+        .loading-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 40px;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid var(--light-green);
+            border-top: 6px solid var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        .ai-processing {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* Auth Required Message */
+        .auth-message {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: 50px;
+            box-shadow: var(--shadow);
+            margin-top: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--light-green);
+        }
+
+        .disease-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.2rem;
+            color: var(--dark-green);
+        }
+
+        .confidence-badge {
+            background: linear-gradient(135deg, #FF9800, #FFB74D);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .result-item {
+            background-color: #f9fffb;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 5px solid var(--accent-green);
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-content {
+            color: var(--neutral-gray);
+            line-height: 1.7;
+        }
+
+        /* Impact Section */
+        .impact-section {
+            background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
+            color: var(--white);
+            padding: 100px 0;
+            border-radius: var(--radius);
+            margin: 80px 0;
+        }
+
+        .impact-title {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+            color: var(--white);
+        }
+
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .impact-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            padding: 40px 30px;
+            text-align: center;
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .impact-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .impact-card:hover {
+            transform: translateY(-10px);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .impact-icon {
+            font-size: 3rem;
+            margin-bottom: 25px;
+            color: var(--light-green);
+        }
+
+        .impact-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Technology Section */
+        .tech-section {
+            text-align: center;
+            padding: 100px 0;
+        }
+
+        .tech-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .tech-badge {
+            background-color: var(--white);
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-weight: 600;
+            color: var(--primary-green);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .tech-badge:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark-green);
+            color: var(--white);
+            padding: 60px 0 30px;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-logo .logo {
+            color: var(--white);
+        }
+
+        .footer-about {
+            max-width: 400px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .footer-team {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .team-members {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .powered-by {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Error Display */
+        .error-container {
+            display: none;
+            background-color: #ffebee;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 5px solid #f44336;
+        }
+
+        .error-title {
+            color: #d32f2f;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+            
+            .steps-container {
+                gap: 20px;
+            }
+            
+            .step-card {
+                min-width: 220px;
+            }
+            
+            .account-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .nav-links {
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero h1 {
+                font-size: 2.3rem;
+            }
+            
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .upload-section {
+                padding: 40px 20px;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+            }
+            
+            .account-modal {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .step-card {
+                min-width: 100%;
+            }
+            
+            .auth-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Header & Navigation -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">
+                    <i class="fas fa-leaf logo-icon"></i>
+                    <span>Plant Disease Detector</span>
+                </a>
+                <div class="nav-links">
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#analyze">Analyze</a>
+                    <a href="#impact">Impact</a>
+                    <div class="auth-buttons" id="authButtons">
+                        <!-- Buttons will be populated by JavaScript -->
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Account Modal -->
+    <div class="modal-overlay" id="accountModal">
+        <div class="account-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">My Account</h2>
+                <button class="close-modal" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="account-info">
+                <div class="info-card">
+                    <h3 class="info-title">
+                        <i class="fas fa-user"></i>
+                        <span>Profile Information</span>
+                    </h3>
+                    <div class="info-content">
+                        <p><strong>Name:</strong> <span id="accountName">Loading...</span></p>
+                        <p><strong>Email:</strong> <span id="accountEmail">Loading...</span></p>
+                        <p><strong>Member Since:</strong> <span id="accountDate">Loading...</span></p>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3 class="info-title">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Usage Statistics</span>
+                    </h3>
+                    <div class="info-content">
+                        <p><strong>Total Scans:</strong> <span id="totalScans">0</span></p>
+                        <p><strong>Last Scan:</strong> <span id="lastScan">Never</span></p>
+                        <p><strong>Most Common Disease:</strong> <span id="commonDisease">None</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scan-history">
+                <h3 class="history-title">
+                    <i class="fas fa-history"></i>
+                    Scan History
+                </h3>
+                <div class="history-list" id="historyList">
+                    <!-- History items will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn btn-secondary" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Log Out
+                </button>
+                <button class="btn btn-primary" id="newScanBtn">
+                    <i class="fas fa-plus"></i> New Scan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>AI-Powered Plant Disease Detection</h1>
+                <p class="hero-tagline">Identify plant diseases instantly with our advanced AI technology. Upload a leaf image and receive accurate diagnosis, treatment recommendations, and prevention tips.</p>
+                <div class="hero-cta">
+                    <button class="btn btn-primary scroll-to-analyze" id="heroAnalyzeBtn">
+                        <i class="fas fa-camera"></i> Start Scanning
+                    </button>
+                    <button class="btn btn-secondary" id="learnMoreBtn">
+                        <i class="fas fa-play-circle"></i> Watch Demo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3 class="step-title">Upload Leaf Image</h3>
+                    <p class="step-description">Take a clear photo of the affected plant leaf and upload it to our secure platform.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="step-title">AI Analysis</h3>
+                    <p class="step-description">Our advanced Gemini AI model analyzes the image to detect diseases with high accuracy.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="fas fa-prescription-bottle-medical"></i>
+                    </div>
+                    <h3 class="step-title">Get Recommendations</h3>
+                    <p class="step-description">Receive detailed treatment plans and prevention tips tailored to the specific disease.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload & Analyze Section -->
+    <section class="section" id="analyze">
+        <div class="container">
+            <h2 class="section-title">Analyze Your Plant</h2>
+            <div class="upload-section">
+                <!-- Auth Required Message -->
+                <div class="auth-message" id="authMessage">
+                    <i class="fas fa-lock" style="font-size: 4rem; color: var(--primary-green); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--dark-green); margin-bottom: 15px;">Account Required</h3>
+                    <p style="color: var(--neutral-gray); margin-bottom: 25px; max-width: 400px;">
+                        You need to create an account to use the plant disease detection feature. It's quick, free, and only takes a minute!
+                    </p>
+                    <button class="btn btn-primary" id="signupRequiredBtn">
+                        <i class="fas fa-user-plus"></i> Create Free Account
+                    </button>
+                </div>
+                
+                <div class="upload-container">
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" accept="image/*" class="file-input" id="fileInput">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 class="upload-instructions">Drag & Drop or Click to Upload Leaf Image</h3>
+                        <p class="upload-note">Supports JPG, PNG up to 10MB. Ensure the leaf is well-lit and visible.</p>
+                    </div>
+                    
+                    <div class="image-preview" id="imagePreview">
+                        <img src="" alt="Leaf Preview" class="preview-img" id="previewImg">
+                    </div>
+                    
+                    <button class="btn btn-primary analyze-btn" id="analyzeBtn" disabled>
+                        <i class="fas fa-search"></i> Analyze Plant Disease
+                    </button>
+                    
+                    <div class="loading-container" id="loadingContainer">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">AI is analyzing your plant...</div>
+                        <div class="ai-processing">
+                            <i class="fas fa-microchip"></i>
+                            <span>Processing with Gemini AI Model</span>
+                        </div>
+                    </div>
+                    
+                    <div class="error-container" id="errorContainer">
+                        <div class="error-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Analysis Error</span>
+                        </div>
+                        <p id="errorMessage">There was an error processing your request. Please try again.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="section results-section" id="resultsSection">
+        <div class="container">
+            <h2 class="section-title">Analysis Results</h2>
+            <div class="results-card">
+                <div class="results-header">
+                    <h2 class="disease-name" id="diseaseName">Early Blight</h2>
+                    <div class="confidence-badge" id="confidenceBadge">94% Confidence</div>
+                </div>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-title">
+                            <i class="fas fa-stethoscope"></i>
+                            <span>Symptoms</span>
+                        </div>
+                        <div class="result-content" id="symptomsText">
+                            Dark brown spots with concentric rings, yellow halos around lesions, typically starting on lower leaves.
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-title">
+                            <i class="fas fa-medkit"></i>
+                            <span>Treatment</span>
+                        </div>
+                        <div class="result-content" id="treatmentText">
+                            Apply copper-based fungicides every 7-10 days. Remove infected leaves and improve air circulation.
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-title">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Prevention</span>
+                        </div>
+                        <div class="result-content" id="preventionText">
+                            Rotate crops annually, avoid overhead watering, ensure proper spacing between plants.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Section -->
+    <section class="impact-section" id="impact">
+        <div class="container">
+            <h2 class="impact-title">Why Early Detection Matters</h2>
+            <div class="impact-grid">
+                <div class="impact-card">
+                    <div class="impact-icon">
+                        <i class="fas fa-tractor"></i>
+                    </div>
+                    <h3>Increase Farmer Yields</h3>
+                    <p>Early disease detection can prevent up to 40% crop loss, improving livelihoods and food security.</p>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h3>Promote Sustainable Farming</h3>
+                    <p>Targeted treatment reduces chemical usage by up to 60%, protecting ecosystems and soil health.</p>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-icon">
+                        <i class="fas fa-globe-americas"></i>
+                    </div>
+                    <h3>Global Food Security</h3>
+                    <p>Plant diseases cause $220B in annual losses worldwide. Early detection helps secure food supply chains.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section class="section tech-section" id="technology">
+        <div class="container">
+            <h2 class="section-title">Our Technology Stack</h2>
+            <p style="max-width: 700px; margin: 0 auto 40px; color: var(--neutral-gray); text-align: center;">
+                We've built a robust, scalable platform using cutting-edge technologies that work seamlessly together.
+            </p>
+            <div class="tech-badges">
+                <div class="tech-badge">
+                    <i class="fab fa-html5"></i>
+                    <span>HTML5 & CSS3</span>
+                </div>
+                <div class="tech-badge">
+                    <i class="fab fa-js-square"></i>
+                    <span>JavaScript ES6+</span>
+                </div>
+                <div class="tech-badge">
+                    <i class="fab fa-node-js"></i>
+                    <span>Node.js Backend</span>
+                </div>
+                <div class="tech-badge">
+                    <i class="fas fa-robot"></i>
+                    <span>Gemini AI Model</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo">
+                        <i class="fas fa-leaf logo-icon"></i>
+                        <span>Plant Disease Detector</span>
+                    </div>
+                    <p class="footer-about">
+                        An AI-powered platform for early detection and treatment of plant diseases, helping farmers protect their crops and improve yields.
+                    </p>
+                    <div class="powered-by">
+                        <i class="fas fa-bolt"></i>
+                        <span>Powered by Gemini AI</span>
+                    </div>
+                </div>
+                <div class="footer-team">
+                    <h3>Team</h3>
+                    <div class="team-members">
+                        <div>Eden Mersha</div>
+                        <div>Meaza Raswork</div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2026 Plant Disease Detector | AgriTech Hackathon Project | All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        const appState = {
+            currentUser: null,
+            scanHistory: []
+        };
+
+        // DOM Elements
+        const authButtons = document.getElementById('authButtons');
+        const accountModal = document.getElementById('accountModal');
+        const closeModal = document.getElementById('closeModal');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const newScanBtn = document.getElementById('newScanBtn');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const heroAnalyzeBtn = document.getElementById('heroAnalyzeBtn');
+        const authMessage = document.getElementById('authMessage');
+        const signupRequiredBtn = document.getElementById('signupRequiredBtn');
+        
+        // Account modal elements
+        const accountName = document.getElementById('accountName');
+        const accountEmail = document.getElementById('accountEmail');
+        const accountDate = document.getElementById('accountDate');
+        const totalScans = document.getElementById('totalScans');
+        const lastScan = document.getElementById('lastScan');
+        const commonDisease = document.getElementById('commonDisease');
+        const historyList = document.getElementById('historyList');
+        
+        // Result display elements
+        const diseaseName = document.getElementById('diseaseName');
+        const confidenceBadge = document.getElementById('confidenceBadge');
+        const symptomsText = document.getElementById('symptomsText');
+        const treatmentText = document.getElementById('treatmentText');
+        const preventionText = document.getElementById('preventionText');
+        
+        // Initialize application
+        function initApp() {
+            loadUserData();
+            updateAuthUI();
+            setupEventListeners();
+            setupScrollAnimations();
+        }
+        
+        // Load user data from localStorage
+        function loadUserData() {
+            const userData = localStorage.getItem('plantdisease_user');
+            const historyData = localStorage.getItem('plantdisease_history');
+            
+            if (userData) {
+                appState.currentUser = JSON.parse(userData);
+            }
+            
+            if (historyData) {
+                appState.scanHistory = JSON.parse(historyData);
+            }
+        }
+        
+        // Save user data to localStorage
+        function saveUserData() {
+            if (appState.currentUser) {
+                localStorage.setItem('plantdisease_user', JSON.stringify(appState.currentUser));
+            }
+            localStorage.setItem('plantdisease_history', JSON.stringify(appState.scanHistory));
+        }
+        
+        // Update authentication UI - FIXED: Show Sign Up first, then Log Out
+        function updateAuthUI() {
+            // Clear auth buttons
+            authButtons.innerHTML = '';
+            
+            if (appState.currentUser) {
+                // User is logged in - HIDE the auth message, SHOW user profile
+                authMessage.style.display = 'none';
+                
+                // Create user profile button
+                const userProfile = document.createElement('div');
+                userProfile.className = 'user-profile';
+                userProfile.id = 'userProfileBtn';
+                userProfile.innerHTML = `
+                    <div class="user-avatar">
+                        ${appState.currentUser.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span class="user-name">${appState.currentUser.name}</span>
+                `;
+                
+                // Add logout button
+                const logoutButton = document.createElement('button');
+                logoutButton.className = 'btn btn-secondary';
+                logoutButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> Log Out';
+                logoutButton.id = 'logoutHeaderBtn';
+                
+                authButtons.appendChild(userProfile);
+                authButtons.appendChild(logoutButton);
+                
+                // Add event listeners
+                document.getElementById('userProfileBtn').addEventListener('click', showAccountModal);
+                document.getElementById('logoutHeaderBtn').addEventListener('click', handleLogout);
+                
+                // Enable upload area
+                uploadArea.style.cursor = 'pointer';
+                uploadArea.style.opacity = '1';
+                uploadArea.title = 'Click or drag & drop to upload leaf image';
+                
+            } else {
+                // User is not logged in - SHOW the auth message, SHOW Sign Up button
+                authMessage.style.display = 'flex';
+                
+                // Create sign up button (ONLY Sign Up, not Login)
+                const signUpButton = document.createElement('button');
+                signUpButton.className = 'btn btn-primary';
+                signUpButton.innerHTML = '<i class="fas fa-user-plus"></i> Sign Up';
+                signUpButton.id = 'signUpBtn';
+                
+                authButtons.appendChild(signUpButton);
+                
+                // Add event listener
+                document.getElementById('signUpBtn').addEventListener('click', showSignupForm);
+                
+                // Disable upload area for non-logged in users
+                uploadArea.style.cursor = 'not-allowed';
+                uploadArea.style.opacity = '0.7';
+                uploadArea.title = 'Please sign up to upload images';
+            }
+        }
+        
+        // Show signup form (inline modal)
+        function showSignupForm() {
+            // Create modal overlay
+            const signupModal = document.createElement('div');
+            signupModal.className = 'modal-overlay active';
+            signupModal.id = 'signupModal';
+            
+            // Create signup form (ONLY for signing up, not login)
+            signupModal.innerHTML = `
+                <div class="account-modal" style="max-width: 450px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Create Your Account</h2>
+                        <button class="close-modal" id="closeSignupModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="signupForm" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label for="signupName" style="font-weight: 600; color: var(--dark-green);">Full Name</label>
+                            <input type="text" id="signupName" placeholder="Enter your full name" required style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit;">
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label for="signupEmail" style="font-weight: 600; color: var(--dark-green);">Email Address</label>
+                            <input type="email" id="signupEmail" placeholder="Enter your email" required style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit;">
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label for="signupPassword" style="font-weight: 600; color: var(--dark-green);">Create Password</label>
+                            <input type="password" id="signupPassword" placeholder="Create a password" required style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit;">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                            <i class="fas fa-user-plus"></i> Create Account & Start Scanning
+                        </button>
+                    </form>
+                    
+                    <p style="text-align: center; margin-top: 20px; color: var(--neutral-gray); font-size: 0.9rem;">
+                        Already have an account? <a href="#" id="switchToLogin" style="color: var(--primary-green); text-decoration: none; font-weight: 600;">Login here</a>
+                    </p>
+                    
+                    <p style="text-align: center; margin-top: 20px; color: var(--neutral-gray); font-size: 0.9rem;">
+                        By creating an account, you agree to our Terms of Service
+                    </p>
+                </div>
+            `;
+            
+            document.body.appendChild(signupModal);
+            
+            // Add event listeners
+            document.getElementById('closeSignupModal').addEventListener('click', () => {
+                document.getElementById('signupModal').remove();
+            });
+            
+            document.getElementById('switchToLogin').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('signupModal').remove();
+                showLoginForm();
+            });
+            
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+        }
+        
+        // Show login form (for existing users)
+        function showLoginForm() {
+            // Create modal overlay
+            const loginModal = document.createElement('div');
+            loginModal.className = 'modal-overlay active';
+            loginModal.id = 'loginModal';
+            
+            // Create login form for existing users
+            loginModal.innerHTML = `
+                <div class="account-modal" style="max-width: 450px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Welcome Back!</h2>
+                        <button class="close-modal" id="closeLoginModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="loginForm" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label for="loginEmail" style="font-weight: 600; color: var(--dark-green);">Email Address</label>
+                            <input type="email" id="loginEmail" placeholder="Enter your email" required style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit;">
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label for="loginPassword" style="font-weight: 600; color: var(--dark-green);">Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit;">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                            <i class="fas fa-sign-in-alt"></i> Login to Your Account
+                        </button>
+                    </form>
+                    
+                    <p style="text-align: center; margin-top: 20px; color: var(--neutral-gray); font-size: 0.9rem;">
+                        Don't have an account? <a href="#" id="switchToSignup" style="color: var(--primary-green); text-decoration: none; font-weight: 600;">Sign up here</a>
+                    </p>
+                </div>
+            `;
+            
+            document.body.appendChild(loginModal);
+            
+            // Add event listeners
+            document.getElementById('closeLoginModal').addEventListener('click', () => {
+                document.getElementById('loginModal').remove();
+            });
+            
+            document.getElementById('switchToSignup').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('loginModal').remove();
+                showSignupForm();
+            });
+            
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        }
+        
+        // Handle signup form submission
+        function handleSignup(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            if (!name || !email || !password) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            // Create user object
+            appState.currentUser = {
+                id: Date.now().toString(),
+                name: name,
+                email: email,
+                joined: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            };
+            
+            // Initialize empty scan history
+            appState.scanHistory = [];
+            
+            // Save to localStorage
+            saveUserData();
+            
+            // Update UI
+            updateAuthUI();
+            
+            // Close signup modal
+            document.getElementById('signupModal').remove();
+            
+            // Show welcome message
+            showNotification(`Welcome to Plant Disease Detector, ${name}! Your account has been created and you can now start analyzing plants.`, 'success');
+        }
+        
+        // Handle login form submission
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            // Check if user exists in localStorage
+            const userData = localStorage.getItem('plantdisease_user');
+            if (!userData) {
+                showNotification('No account found with that email. Please sign up first.', 'error');
+                return;
+            }
+            
+            const user = JSON.parse(userData);
+            
+            // For demo purposes, we'll accept any password
+            // In a real app, you would verify the password
+            appState.currentUser = user;
+            appState.currentUser.lastLogin = new Date().toISOString();
+            
+            // Load user's scan history
+            const historyData = localStorage.getItem('plantdisease_history');
+            if (historyData) {
+                appState.scanHistory = JSON.parse(historyData);
+            }
+            
+            // Save updated user data
+            saveUserData();
+            
+            // Update UI
+            updateAuthUI();
+            
+            // Close login modal
+            document.getElementById('loginModal').remove();
+            
+            // Show welcome back message
+            showNotification(`Welcome back, ${user.name}!`, 'success');
+        }
+        
+        // Show account modal
+        function showAccountModal() {
+            if (!appState.currentUser) return;
+            
+            // Update account info
+            accountName.textContent = appState.currentUser.name;
+            accountEmail.textContent = appState.currentUser.email;
+            accountDate.textContent = new Date(appState.currentUser.joined).toLocaleDateString();
+            
+            // Update statistics
+            totalScans.textContent = appState.scanHistory.length;
+            
+            if (appState.scanHistory.length > 0) {
+                const last = appState.scanHistory[appState.scanHistory.length - 1];
+                lastScan.textContent = new Date(last.timestamp).toLocaleDateString();
+                
+                // Find most common disease
+                const diseaseCounts = {};
+                appState.scanHistory.forEach(scan => {
+                    diseaseCounts[scan.disease] = (diseaseCounts[scan.disease] || 0) + 1;
+                });
+                
+                let mostCommon = 'None';
+                let maxCount = 0;
+                
+                for (const [disease, count] of Object.entries(diseaseCounts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        mostCommon = disease;
+                    }
+                }
+                
+                commonDisease.textContent = mostCommon;
+            } else {
+                lastScan.textContent = 'Never';
+                commonDisease.textContent = 'None';
+            }
+            
+            // Update history list
+            updateHistoryList();
+            
+            // Show modal
+            accountModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Update history list in account modal
+        function updateHistoryList() {
+            if (appState.scanHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div class="no-history">
+                        <i class="fas fa-search" style="font-size: 3rem; color: var(--light-green); margin-bottom: 15px;"></i>
+                        <p>No scan history yet. Upload your first plant image to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let historyHTML = '';
+            
+            // Show latest 10 scans
+            const recentScans = [...appState.scanHistory].reverse().slice(0, 10);
+            
+            recentScans.forEach(scan => {
+                historyHTML += `
+                    <div class="history-item">
+                        <div class="history-disease">${scan.disease}</div>
+                        <div class="history-date">${new Date(scan.timestamp).toLocaleString()}</div>
+                        <div class="history-confidence">${scan.confidence}</div>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = historyHTML;
+        }
+        
+        // Handle logout
+        function handleLogout() {
+            appState.currentUser = null;
+            saveUserData();
+            updateAuthUI();
+            
+            // Close modal if open
+            accountModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            showNotification('You have been logged out successfully.', 'success');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = message;
+            
+            const bgColor = type === 'success' ? 'var(--primary-green)' : 
+                           type === 'error' ? '#f44336' : 
+                           '#2196F3';
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 25px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-hover);
+                z-index: 3000;
+                transform: translateX(150%);
+                transition: transform 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(150%)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+        
+        // Setup scroll animations
+        function setupScrollAnimations() {
+            // Animate sections when they come into view
+            const sections = document.querySelectorAll('.section');
+            const stepCards = document.querySelectorAll('.step-card');
+            const impactCards = document.querySelectorAll('.impact-card');
+            
+            const checkVisibility = () => {
+                sections.forEach(section => {
+                    const sectionTop = section.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (sectionTop < windowHeight * 0.75) {
+                        section.classList.add('visible');
+                    }
+                });
+                
+                // Animate step cards with delay
+                stepCards.forEach((card, index) => {
+                    const cardTop = card.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (cardTop < windowHeight * 0.85) {
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                        }, index * 200);
+                    }
+                });
+                
+                // Animate impact cards with delay
+                impactCards.forEach((card, index) => {
+                    const cardTop = card.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (cardTop < windowHeight * 0.85) {
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                        }, index * 200);
+                    }
+                });
+            };
+            
+            // Check on scroll
+            window.addEventListener('scroll', checkVisibility);
+            
+            // Check initially
+            checkVisibility();
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Sign up required button
+            signupRequiredBtn.addEventListener('click', showSignupForm);
+            
+            // Scroll to analyze section
+            heroAnalyzeBtn.addEventListener('click', () => {
+                if (!appState.currentUser) {
+                    showSignupForm();
+                } else {
+                    document.getElementById('analyze').scrollIntoView({ 
+                        behavior: 'smooth' 
+                    });
+                }
+            });
+            
+            // Close account modal
+            closeModal.addEventListener('click', () => {
+                accountModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // New scan button
+            newScanBtn.addEventListener('click', () => {
+                accountModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                document.getElementById('analyze').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            });
+            
+            // Logout button in modal
+            logoutBtn.addEventListener('click', handleLogout);
+            
+            // Learn more button
+            document.getElementById('learnMoreBtn').addEventListener('click', () => {
+                document.getElementById('how-it-works').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            });
+            
+            // File upload handling
+            uploadArea.addEventListener('click', (e) => {
+                if (!appState.currentUser) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showSignupForm();
+                    return;
+                }
+                fileInput.click();
+            });
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!appState.currentUser) {
+                    e.dataTransfer.dropEffect = 'none';
+                    return;
+                }
+                uploadArea.style.borderColor = 'var(--primary-green)';
+                uploadArea.style.backgroundColor = '#e8f7e8';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                if (!appState.currentUser) return;
+                uploadArea.style.borderColor = 'var(--accent-green)';
+                uploadArea.style.backgroundColor = '#f9fffb';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (!appState.currentUser) {
+                    showSignupForm();
+                    return;
+                }
+                
+                uploadArea.style.borderColor = 'var(--accent-green)';
+                uploadArea.style.backgroundColor = '#f9fffb';
+                
+                if (e.dataTransfer.files.length) {
+                    handleFileSelect(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    if (!appState.currentUser) {
+                        showSignupForm();
+                        return;
+                    }
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+            
+            // Analyze button
+            analyzeBtn.addEventListener('click', analyzeImage);
+            
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Handle file selection and preview
+        function handleFileSelect(file) {
+            // Check if user is logged in
+            if (!appState.currentUser) {
+                showSignupForm();
+                return;
+            }
+            
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                showError('Please select an image file (JPG, PNG, etc.)');
+                return;
+            }
+            
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('Image size should be less than 10MB');
+                return;
+            }
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                analyzeBtn.disabled = false;
+                hideError();
+                
+                // Scroll to preview
+                imagePreview.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Analyze image
+        async function analyzeImage() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            // Check if user is logged in
+            if (!appState.currentUser) {
+                showSignupForm();
+                return;
+            }
+            
+            // Show loading state
+            analyzeBtn.disabled = true;
+            const originalText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            loadingContainer.style.display = 'flex';
+            hideError();
+            resultsSection.style.display = 'none';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                // Call backend API (EXACTLY as required)
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Check if analysis was successful
+                if (data.success) {
+                    // Display results with animation
+                    displayResults(data.structured, file.name);
+                    
+                    // Hide loading
+                    loadingContainer.style.display = 'none';
+                    analyzeBtn.innerHTML = originalText;
+                    analyzeBtn.disabled = false;
+                    
+                    // Scroll to results
+                    setTimeout(() => {
+                        resultsSection.scrollIntoView({ behavior: 'smooth' });
+                    }, 300);
+                } else {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+                
+            } catch (error) {
+                console.error('Error during analysis:', error);
+                showError(error.message || 'Failed to analyze image. Please try again.');
+                loadingContainer.style.display = 'none';
+                analyzeBtn.innerHTML = originalText;
+                analyzeBtn.disabled = false;
+                
+                // Demo mode fallback
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showNotification('Using demo mode. Backend server appears to be offline.', 'info');
+                    simulateAnalysis(file.name);
+                }
+            }
+        }
+        
+        // Simulate analysis for demo purposes
+        function simulateAnalysis(fileName) {
+            setTimeout(() => {
+                const demoResults = {
+                    disease: 'Tomato Early Blight',
+                    confidence: '92%',
+                    symptoms: 'Dark brown spots with concentric rings, yellow halos around lesions, typically starting on lower leaves. Leaves may turn yellow and drop prematurely.',
+                    treatment: 'Apply copper-based fungicides every 7-10 days. Remove infected leaves and improve air circulation. Use resistant tomato varieties if available.',
+                    prevention: 'Rotate crops annually, avoid overhead watering, ensure proper spacing between plants (24-36 inches). Remove plant debris at the end of the season.'
+                };
+                
+                displayResults(demoResults, fileName);
+                loadingContainer.style.display = 'none';
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Analyze Plant Disease';
+                
+                setTimeout(() => {
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            }, 2000);
+        }
+        
+        // Display results from backend
+        function displayResults(resultData, fileName) {
+            // Fill in result data
+            const disease = resultData.disease || 'Unknown Disease';
+            const confidence = resultData.confidence || 'High';
+            
+            diseaseName.textContent = disease;
+            confidenceBadge.textContent = `${confidence} Confidence`;
+            symptomsText.textContent = resultData.symptoms || 'No symptoms data available.';
+            treatmentText.textContent = resultData.treatment || 'No treatment recommendations available.';
+            preventionText.textContent = resultData.prevention || 'No prevention tips available.';
+            
+            // Save to scan history
+            const scanRecord = {
+                id: Date.now().toString(),
+                timestamp: new Date().toISOString(),
+                fileName: fileName,
+                disease: disease,
+                confidence: confidence,
+                symptoms: resultData.symptoms || '',
+                treatment: resultData.treatment || '',
+                prevention: resultData.prevention || ''
+            };
+            
+            appState.scanHistory.push(scanRecord);
+            saveUserData();
+            
+            // Show results section with animation
+            resultsSection.style.display = 'block';
+            
+            // Show success notification
+            showNotification(`Analysis complete! Detected: ${disease}`, 'success');
+        }
+        
+        // Error handling functions
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorContainer.style.display = 'block';
+            
+            // Scroll to error
+            setTimeout(() => {
+                errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+        
+        function hideError() {
+            errorContainer.style.display = 'none';
+        }
+        
+        // Health check on load
+        window.addEventListener('load', async () => {
+            initApp();
+            
+            // Trigger initial animation for sections in view
+            setTimeout(() => {
+                const event = new Event('scroll');
+                window.dispatchEvent(event);
+            }, 100);
+            
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    console.log('✅ Backend health check passed');
+                } else {
+                    console.warn('⚠️ Backend health check returned non-OK status');
+                }
+            } catch (error) {
+                console.warn('⚠️ Backend may not be running:', error.message);
+            }
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === accountModal) {
+                accountModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+    </script>
+</body>
+</html>
